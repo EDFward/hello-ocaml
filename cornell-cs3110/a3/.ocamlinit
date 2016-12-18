@@ -1,0 +1,42 @@
+#directory "_build";;
+#require "str";;
+#load "data.cmo";;
+#load "engine.cmo";;
+#install_printer Engine.ListEngine.format;;
+#install_printer Engine.TreeEngine.format;;
+
+open Data;;
+
+module IntComparble = struct
+  type t = int 
+  let compare a b = match compare a b with
+    | -1 -> `LT
+    | 1 -> `GT
+    | _ -> `EQ
+  let format fmt = Format.fprintf fmt "%d"
+end
+
+(* Dict *)
+
+module IntDict = MakeListDictionary(IntComparble);;
+#install_printer IntDict.format;;
+
+let empty_dict = IntDict.empty;;
+
+let (--) i j =
+  let rec aux n acc =
+    if n < i then acc else aux (n-1) (n::acc)
+  in aux j []
+
+let sample_dict = 
+  List.fold_left (fun acc i -> IntDict.insert i i acc) IntDict.empty (1--100)
+
+(* Set *)
+
+module IntSet = MakeSetOfDictionary(IntDict);;
+#install_printer IntSet.format;;
+
+let make_sample_set = List.fold_left (fun acc i -> IntSet.insert i acc) IntSet.empty
+
+let sample_set1 = make_sample_set (1--30) and sample_set2 = make_sample_set (20--40)
+

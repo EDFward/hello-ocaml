@@ -1,0 +1,8 @@
+*.swp
+
+*.byte
+*.orig
+
+_build/
+_tags/
+
