@@ -1,6 +1,7 @@
 exception Unimplemented
 
-(* Write a function of type a list -> a list list that takes a list xs and
+(* Exercise 2.1:
+ * Write a function of type a list -> a list list that takes a list xs and
  * returns a list of all the suffixes of xs in decreasing order of length. *)
 
 let suffixes ls =
@@ -11,19 +12,21 @@ let suffixes ls =
   aux [] ls
 
 
-(* Optimize unbalanced tree set to have following properties:
+(* Exercise 2.2 - 2.4:
+ * Optimize unbalanced tree set to have following properties:
  * 1. Instead of 2d comparisons (d is the tree depth), do no more than d + 1;
- * 2. Avoid unnecessary copying when inserting existing elements.. 
- * 
+ * 2. Avoid unnecessary copying when inserting existing elements.
+ *
  * The traditional implementation is in `data.ml`. *)
+
+type 'a tree = E | T of ('a tree) * 'a * ('a tree)
 
 module type OptimizedSet = functor (E : Data.Ordered) -> Data.Set
 
 module OptimizedSet(E: Data.Ordered) =
 struct
   type elt = E.t
-  type tree = E | T of tree * elt * tree
-  type t = tree
+  type t = elt tree
 
   let empty = E
 
@@ -57,3 +60,31 @@ struct
       with
         Found -> root
 end
+
+(* Exercise 2.5
+ * Using the idea of sharing within a single object, write a function to
+ * generate complete binary tree, AND
+ * write a function to generate arbitrary size balanced tree.*)
+let rec complete x d = if d = 0 then E else
+  let
+    subtree = complete x (d-1)
+  in
+    T(subtree, x, subtree)
+
+let rec balanced_tree x n =
+  (* Create a pair of trees, one of size m, another of m+1. *)
+    let rec create2 = function
+    | 0 -> (E, T(E, x, E))
+    | n ->
+      let (l, r) = create2 ((n-1)/2) in
+      if n mod 2 = 0 then (T(l, x, r), T(r, x, r)) else (T(l, x, l), T(l, x, r))
+  in create2 n |> fst
+
+(*
+ * More straight forward method, however no structure sharing happens.
+ *
+let rec balanced_tree' x = function
+  | 0 -> E
+  | 1 -> T(E, x, E)
+  | n -> T(balanced_tree x ((n-1)/2), x, balanced_tree x (n-1-(n-1)/2))
+*)
