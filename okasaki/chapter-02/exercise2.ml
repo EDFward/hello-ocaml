@@ -82,9 +82,10 @@ let rec balanced_tree x n =
 
 (*
  * More straight forward method, however no structure sharing happens.
- *
+
 let rec balanced_tree' x = function
   | 0 -> E
   | 1 -> T(E, x, E)
   | n -> T(balanced_tree x ((n-1)/2), x, balanced_tree x (n-1-(n-1)/2))
+
 *)
