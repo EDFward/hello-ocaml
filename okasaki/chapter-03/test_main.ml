@@ -16,14 +16,14 @@ let _ = Random.self_init ()
 (* Range operator. *)
 let make_range i j =
   let rec aux n acc =
-    if n < i then acc else aux (n-1) (n::acc)
-  in aux j []
+    if n < i then acc else aux (n-1) (n::acc) in
+  aux j []
 
-let create_randomly_inserted_heap i j = let open IntLeftistTreeHeap in
-  let
-    random_range = List.sort (fun _ _ -> (Random.int 3) - 1) (make_range i j)
-  in
-  List.fold_left (fun acc i -> insert acc i) empty random_range
+let create_randomly_inserted_heap by_merge i j = let open IntLeftistTreeHeap in
+  let insert_func = if by_merge then insert else non_merge_insert in
+  let random_range = List.sort
+      (fun _ _ -> (Random.int 3) - 1) (make_range i j) in
+  List.fold_left (fun acc i -> insert_func acc i) empty random_range
 
 let tests = let open IntLeftistTreeHeap in [
     "empty" >:: (
@@ -40,9 +40,9 @@ let tests = let open IntLeftistTreeHeap in [
           | h -> (
               assert_equal i (find_min h);
               aux (i+1) (delete_min h);
-            )
-        in
-        aux 1 (create_randomly_inserted_heap 1 100000)
+            ) in
+        aux 1 (create_randomly_inserted_heap true 1 100000);
+        aux 1 (create_randomly_inserted_heap false 1 100000);
     );
   ]
 

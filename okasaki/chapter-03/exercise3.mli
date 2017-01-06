@@ -24,10 +24,11 @@ module LeftistTreeHeap :
   sig
     type elt = E.t
     type t = elt leftist_tree
-    val empty : 'a leftist_tree
-    val is_empty : 'a leftist_tree -> bool
-    val merge : E.t leftist_tree -> E.t leftist_tree -> E.t leftist_tree
-    val insert : E.t leftist_tree -> E.t -> E.t leftist_tree
-    val find_min : 'a leftist_tree -> 'a
-    val delete_min : E.t leftist_tree -> E.t leftist_tree
+    val empty : t
+    val is_empty : t -> bool
+    val merge : t -> t -> t
+    val insert : t -> elt -> t
+    val find_min : t -> elt
+    val delete_min : t -> t
+    val non_merge_insert : t -> elt -> t
   end

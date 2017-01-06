@@ -38,10 +38,8 @@ struct
 
   (* Helper function to make a tree which properly updated the rank. *)
   let make v h1 h2 = let r1 = rank h1 and r2 = rank h2 in
-    if r1 < r2 then
-      T(r1+1, h2, v, h1)
-    else
-      T(r2+1, h1, v, h2)
+    if r1 < r2 then T(r1+1, h2, v, h1)
+    else T(r2+1, h1, v, h2)
 
   let rec merge h1 h2 = match (h1, h2) with
     | (E, h)                                 -> h
@@ -61,4 +59,12 @@ struct
   let delete_min = function
     | E -> raise Invalid_argument
     | T(_, a, _, b) -> merge a b
+
+  (* Exercise 3.2:
+   * Define 'insert' directly. *)
+  let rec non_merge_insert h v = match h with
+    | E              -> T(1, E, v, E)
+    | T(r, a, v', b) ->
+      if E.lt v v' then T(1, h, v, E)
+      else make v' a (non_merge_insert b v)
 end
