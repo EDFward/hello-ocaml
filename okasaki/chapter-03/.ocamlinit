@@ -1,0 +1,29 @@
+#directory "_build";;
+#load "data.cmo";;
+#load "exercise3.cmo";;
+
+open Data
+open Exercise3
+
+module IntOrdered = struct
+  type t = int
+  let eq = (=)
+  let lt s1 s2 = compare s1 s2 = -1
+  let leq s1 s2 = compare s1 s2 != 1
+end
+
+module IntLeftistTreeHeap = LeftistTreeHeap(IntOrdered)
+
+let _ = Random.self_init ()
+
+(* Range operator. *)
+let make_range i j =
+  let rec aux n acc =
+    if n < i then acc else aux (n-1) (n::acc)
+  in aux j []
+
+let create_randomly_inserted_heap i j = let open IntLeftistTreeHeap in
+  let
+    random_range = List.sort (fun _ _ -> (Random.int 3) - 1) (make_range i j)
+  in
+  List.fold_left (fun acc i -> insert acc i) empty random_range
