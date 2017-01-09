@@ -50,22 +50,23 @@ let tests =
         let open Landmark in
         let profile_from_list_naive = register "profile_from_list_naive" in
         let profile_from_list = register "profile_from_list" in
+        let profile_from_list_arr = register "profile_from_list_arr" in
         let random_range = make_random_range 1 10000 in (
           start_profiling ();
-          test_min_equal_of_range 1 (
-            enter profile_from_list_naive;
-            let r = from_list_naive random_range in (
-              exit profile_from_list_naive;
-              r
-            )
-          );
-          test_min_equal_of_range 1 (
-            enter profile_from_list;
-            let r = from_list random_range in (
-              exit profile_from_list;
-              r
-            )
-          );
+          List.iter (
+            fun (label, f) ->
+              test_min_equal_of_range 1 (
+                enter label;
+                let r = f random_range in (
+                  exit label;
+                  r
+                )
+              )
+          ) [
+            (profile_from_list_naive, from_list_naive);
+            (profile_from_list_arr, from_list_arr);
+            (profile_from_list, from_list);
+          ]
         )
     );
   ]

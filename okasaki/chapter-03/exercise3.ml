@@ -72,8 +72,20 @@ struct
 
   (* Exercise 3.3:
    * Implement `from_list` in (log n) passes where each pass merges adjacent
-   * pairs of heaps, which takes O(n) time. *)
-  let from_list = function
+   * pairs of heaps, which takes O(n) time in total. *)
+  let from_list ls =
+    let rec merge_pairs = function
+      | []         -> []
+      | h::[]      -> [h]
+      | h1::h2::tl -> (merge h1 h2)::(merge_pairs tl) in
+    let rec merge_until_one_left = function
+      | []    -> E
+      | h::[] -> h
+      | ls    -> merge_pairs ls |> merge_until_one_left in
+    merge_until_one_left (List.map (fun v -> T(1, E, v, E)) ls)
+
+  (* Another kind of divide and conquer. *)
+  let from_list_arr = function
     | [] -> E
     | ls ->
       let arr = Array.of_list ls in

@@ -32,5 +32,6 @@ module LeftistTreeHeap :
     val delete_min : t -> t
     val non_merge_insert : t -> elt -> t
     val from_list_naive : elt list -> t
+    val from_list_arr: elt list -> t
     val from_list: elt list -> t
   end
