@@ -30,7 +30,7 @@ struct
   type t = elt leftist_tree
 
   let empty = E
-  let is_empty h = E = h
+  let is_empty h = E == h
 
   let rank = function
     | E             -> 0
@@ -67,4 +67,18 @@ struct
     | T(r, a, v', b) ->
       if E.lt v v' then T(1, h, v, E)
       else make v' a (non_merge_insert b v)
+
+  let from_list_naive = List.fold_left (fun acc i -> insert acc i) empty
+
+  (* Exercise 3.3:
+   * Implement `from_list` in (log n) passes where each pass merges adjacent
+   * pairs of heaps, which takes O(n) time. *)
+  let from_list = function
+    | [] -> E
+    | ls ->
+      let arr = Array.of_list ls in
+      let rec aux i j =
+        if i+1 == j then T(1, E, Array.get arr i, E)
+        else let mid = (i+j)/2 in merge (aux i mid) (aux mid j) in
+      aux 0 (Array.length arr)
 end
