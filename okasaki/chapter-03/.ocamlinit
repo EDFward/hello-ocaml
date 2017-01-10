@@ -12,7 +12,8 @@ module IntOrdered = struct
   let leq s1 s2 = compare s1 s2 != 1
 end
 
-module IntLeftistTreeHeap = LeftistTreeHeap(IntOrdered)
+module IntLeftistHeap = LeftistHeap(IntOrdered)
+module IntBinomialHeap = BinomialHeap(IntOrdered)
 
 let _ = Random.self_init ()
 
@@ -22,7 +23,7 @@ let make_range i j =
     if n < i then acc else aux (n-1) (n::acc)
   in aux j []
 
-let create_randomly_inserted_heap i j = let open IntLeftistTreeHeap in
+let create_randomly_inserted_heap i j = let open IntLeftistHeap in
   let
     random_range = List.sort (fun _ _ -> (Random.int 3) - 1) (make_range i j)
   in

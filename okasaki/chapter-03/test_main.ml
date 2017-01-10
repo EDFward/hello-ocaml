@@ -9,9 +9,11 @@ module IntOrdered = struct
   let leq s1 s2 = compare s1 s2 != 1
 end
 
-module IntLeftistTreeHeap = LeftistTreeHeap(IntOrdered)
+module IntLeftistHeap = LeftistHeap(IntOrdered)
 
-module IntWeightBiasedLeftistTreeHeap = WeightBiasedLeftistTreeHeap(IntOrdered)
+module IntWeightBiasedLeftistHeap = WeightBiasedLeftistHeap(IntOrdered)
+
+module IntBinomialHeap = BinomialHeap(IntOrdered)
 
 let _ = Random.self_init ()
 
@@ -24,19 +26,13 @@ let make_range i j =
 let make_random_range i j = List.sort
     (fun _ _ -> (Random.int 3) - 1) (make_range i j)
 
-let create_randomly_inserted_heap by_merge i j = let open IntLeftistTreeHeap in
-  let insert_func = if by_merge then insert else non_merge_insert in
-  let random_range = make_random_range i j in
-  List.fold_left (fun acc i -> insert_func acc i) empty random_range
-
-let tests =
-  let open IntLeftistTreeHeap in
-  let rec test_min_equal_of_range i = function
-    | E -> ()
-    | h -> (
+let tests_for_leftist_heap =
+  let open IntLeftistHeap in
+  let rec test_leftist i h =
+    if is_empty h then () else (
         assert_equal i (find_min h);
-        test_min_equal_of_range (i+1) (delete_min h);
-      ) in [
+        test_leftist (i+1) (delete_min h);
+    ) in [
     "empty" >:: (
       fun _ ->
         assert_equal true (is_empty empty);
@@ -44,8 +40,13 @@ let tests =
     );
     "insert, find and delete" >:: (
       fun _ ->
-        test_min_equal_of_range 1 (create_randomly_inserted_heap true 1 10000);
-        test_min_equal_of_range 1 (create_randomly_inserted_heap false 1 10000);
+        let open List in
+        let range = make_random_range 1 10000 in
+        let h1 = fold_left (fun acc i -> non_merge_insert acc i) empty range in
+        let h2 = fold_left (fun acc i -> insert acc i) empty range in (
+          test_leftist 1 h1;
+          test_leftist 1 h2;
+        )
     );
     "from_list" >:: (
       fun _ ->
@@ -57,7 +58,7 @@ let tests =
           start_profiling ();
           List.iter (
             fun (label, f) ->
-              test_min_equal_of_range 1 (
+              test_leftist 1 (
                 enter label;
                 let r = f random_range in (
                   exit label;
@@ -73,13 +74,29 @@ let tests =
     );
     "weight-biased leftist tree heap" >:: (
       fun _ ->
-        let open IntWeightBiasedLeftistTreeHeap in
+        let open IntWeightBiasedLeftistHeap in
         let range = make_random_range 1 10000 in
         let h = List.fold_left (fun acc i -> insert acc i) empty range in
-        test_min_equal_of_range 1 h
+        test_leftist 1 h
     );
   ]
 
+let tests_for_binomial_heap =
+  let open IntBinomialHeap in
+  let rec test_binomial i h =
+    if is_empty h then () else (
+        assert_equal i (find_min h);
+        test_binomial (i+1) (delete_min h);
+    ) in [
+    "binomial heap" >:: (
+      fun _ ->
+        let range = make_random_range 1 1000 in
+        let h = List.fold_left (fun acc i -> insert acc i) empty range in
+        test_binomial 1 h
+    );
+  ]
+
+let tests = List.append tests_for_leftist_heap tests_for_binomial_heap
 let suite = "chatper 3 tests suite" >::: tests
 
 let _ = run_test_tt_main suite

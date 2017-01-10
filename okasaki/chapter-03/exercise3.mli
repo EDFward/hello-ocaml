@@ -17,9 +17,9 @@ sig
   val find_min : t -> elt
   val delete_min : t -> t
 end
-module type LeftistTreeHeap = functor (E : Ordered) -> Heap
 type 'a leftist_tree = E | T of int * 'a leftist_tree * 'a * 'a leftist_tree
-module LeftistTreeHeap :
+module type LeftistHeap = functor (E : Ordered) -> Heap
+module LeftistHeap :
   functor (E : Ordered) ->
   sig
     type elt = E.t
@@ -35,11 +35,26 @@ module LeftistTreeHeap :
     val from_list_arr: elt list -> t
     val from_list: elt list -> t
   end
-module WeightBiasedLeftistTreeHeap :
+module type WeightBiasedLeftistHeap = functor (E : Ordered) -> Heap
+module WeightBiasedLeftistHeap :
   functor (E : Ordered) ->
   sig
     type elt = E.t
     type t = elt leftist_tree
+    val empty : t
+    val is_empty : t -> bool
+    val merge : t -> t -> t
+    val insert : t -> elt -> t
+    val find_min : t -> elt
+    val delete_min : t -> t
+  end
+type 'a binomial_tree = Node of 'a * 'a binomial_tree list
+module type BinomialHeap = functor (E : Ordered) -> Heap
+module BinomialHeap :
+  functor (E : Ordered) ->
+  sig
+    type elt = E.t
+    type t = (int * elt binomial_tree) list
     val empty : t
     val is_empty : t -> bool
     val merge : t -> t -> t
