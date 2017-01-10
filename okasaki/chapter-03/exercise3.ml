@@ -20,9 +20,9 @@ sig
   val delete_min: t -> t
 end
 
-module type LeftistTreeHeap = functor (E : Ordered) -> Heap
-
 type 'a leftist_tree = E | T of int * ('a leftist_tree) * 'a * ('a leftist_tree)
+
+module type LeftistTreeHeap = functor (E : Ordered) -> Heap
 
 module LeftistTreeHeap(E: Ordered) =
 struct
@@ -93,4 +93,41 @@ struct
         if i+1 == j then T(1, E, Array.get arr i, E)
         else let mid = (i+j)/2 in merge (aux i mid) (aux mid j) in
       aux 0 (Array.length arr)
+end
+
+(* Exercise 3.4:
+ * Implement weight-biased leftist tree heap. *)
+module type WeightBiasedLeftistTreeHeap = functor (E : Ordered) -> Heap
+
+module WeightBiasedLeftistTreeHeap(E: Ordered) =
+struct
+  type elt = E.t
+  type t = elt leftist_tree
+
+  let empty = E
+  let is_empty h = E == h
+
+  let size = function
+    | E             -> 0
+    | T(s, _, _, _) -> s
+
+  let find_min = function
+    | E                -> raise Invalid_argument
+    | T(_, _, v, _)    -> v
+
+  let rec merge h1 h2 = match (h1, h2) with
+    | (E, h)                                         -> h
+    | (h, E)                                         -> h
+    | (h1, h2) when E.lt (find_min h2) (find_min h1) -> merge h2 h1
+    | (T(s1, a1, v1, b1), T(s2, a2, v2, b2))         ->
+      (* v1 is guaranteed to be smaller or equal. *)
+      let s1' = size a1 and s2' = size b1 + size h2 in
+      if s1' >= s2' then T(s1+s2+1, a1, v1, merge b1 h2)
+      else T(s1+s2+1, merge b1 h2, v1, a1)
+
+  let insert h v = merge h (T(1, E, v, E))
+
+  let delete_min = function
+    | E -> raise Invalid_argument
+    | T(_, a, _, b) -> merge a b
 end

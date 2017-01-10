@@ -11,6 +11,8 @@ end
 
 module IntLeftistTreeHeap = LeftistTreeHeap(IntOrdered)
 
+module IntWeightBiasedLeftistTreeHeap = WeightBiasedLeftistTreeHeap(IntOrdered)
+
 let _ = Random.self_init ()
 
 (* Range operator. *)
@@ -68,6 +70,13 @@ let tests =
             (profile_from_list, from_list);
           ]
         )
+    );
+    "weight-biased leftist tree heap" >:: (
+      fun _ ->
+        let open IntWeightBiasedLeftistTreeHeap in
+        let range = make_random_range 1 10000 in
+        let h = List.fold_left (fun acc i -> insert acc i) empty range in
+        test_min_equal_of_range 1 h
     );
   ]
 
