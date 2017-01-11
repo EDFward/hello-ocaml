@@ -15,6 +15,8 @@ module IntWeightBiasedLeftistHeap = WeightBiasedLeftistHeap(IntOrdered)
 
 module IntBinomialHeap = BinomialHeap(IntOrdered)
 
+module IntExplicitMinBinomialHeap = ExplicitMin(IntBinomialHeap)
+
 let _ = Random.self_init ()
 
 (* Range operator. *)
@@ -104,10 +106,26 @@ let tests_for_binomial_heap =
     );
   ]
 
+let tests_for_explicit_min_heap =
+  let open IntExplicitMinBinomialHeap in
+  let rec test_explicit_min i h =
+    if is_empty h then () else (
+      assert_equal i (find_min h);
+      test_explicit_min (i+1) (delete_min h);
+    ) in [
+    "explicit min heap" >:: (
+      fun _ ->
+        let range = make_random_range 1 1000 in
+        let h = List.fold_left (fun acc i -> insert acc i) empty range in
+        test_explicit_min 1 h
+    );
+  ]
+
 let tests = List.concat [
     tests_for_leftist_heap;
     tests_for_binomial_heap;
     tests_for_weight_biased_leftist_heap;
+    tests_for_explicit_min_heap;
   ]
 let suite = "chatper 3 tests suite" >::: tests
 

@@ -29,7 +29,10 @@ sig
 end
 
 module type HeapMaker =
-  functor (E : Ordered) -> Heap with type Element.t = E.t
+  functor (E : Ordered) -> Heap with module Element = E
+
+module type HeapEnhancer =
+  functor (H : Heap) -> Heap with module Element = H.Element
 
 type 'a leftist_tree = E | T of int * 'a leftist_tree * 'a * 'a leftist_tree
 
@@ -69,7 +72,7 @@ struct
     | T(_, _, v, _)    -> v
 
   let delete_min = function
-    | E -> raise Invalid_argument
+    | E             -> raise Invalid_argument
     | T(_, a, _, b) -> merge a b
 
   (* Exercise 3.2:
@@ -139,7 +142,7 @@ struct
   let insert h v = merge h (T(1, E, v, E))
 
   let delete_min = function
-    | E -> raise Invalid_argument
+    | E             -> raise Invalid_argument
     | T(_, a, _, b) -> merge a b
 
   let non_merge_insert h v = raise Unimplemented
@@ -196,6 +199,46 @@ struct
     | (_, Node(_, children)), rest ->
       let without_min = List.mapi (fun i v -> (i, v)) (List.rev children) in
       merge without_min rest
+
+  let non_merge_insert h v = raise Unimplemented
+  let from_list_naive ls = raise Unimplemented
+  let from_list_arr ls = raise Unimplemented
+  let from_list ls = raise Unimplemented
+end
+
+(* Exercise 3.7:
+ * Implement a functor keeping min element separately, thus having O(1)
+ * performance for `find_min`. *)
+module ExplicitMin(H: Heap) =
+struct
+  module Element = H.Element
+  type elt = H.elt
+  type t = E | NE of elt * H.t
+
+  let min e1 e2 = if Element.lt e1 e2 then e1 else e2
+
+  let empty = E
+  let is_empty h = h == E
+
+  let insert h v = match h with
+    | E         -> NE(v, H.insert H.empty v)
+    | NE(m, hp) -> NE(min m v, H.insert hp v)
+
+  let merge h1 h2 = match h1, h2 with
+    | E, h                         -> h
+    | h, E                         -> h
+    | NE(min1, hp1), NE(min2, hp2) -> NE(min min1 min2, H.merge hp1 hp2)
+
+  let find_min = function
+    | E        -> raise Invalid_argument
+    | NE(m, _) -> m
+
+  let delete_min = function
+    | E         -> raise Invalid_argument
+    | NE(_, hp) ->
+      let new_hp = H.delete_min hp in
+      if H.is_empty new_hp then E
+      else NE(H.find_min new_hp, new_hp)
 
   let non_merge_insert h v = raise Unimplemented
   let from_list_naive ls = raise Unimplemented

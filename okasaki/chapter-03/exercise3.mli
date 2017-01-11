@@ -29,7 +29,10 @@ sig
 end
 
 module type HeapMaker =
-  functor (E : Ordered) -> Heap with type Element.t = E.t
+  functor (E : Ordered) -> Heap with module Element = E
+
+module type HeapEnhancer =
+  functor (H : Heap) -> Heap with module Element = H.Element
 
 type 'a leftist_tree = E | T of int * 'a leftist_tree * 'a * 'a leftist_tree
 
@@ -40,3 +43,5 @@ module LeftistHeap : HeapMaker
 module WeightBiasedLeftistHeap : HeapMaker
 
 module BinomialHeap : HeapMaker
+
+module ExplicitMin : HeapEnhancer
