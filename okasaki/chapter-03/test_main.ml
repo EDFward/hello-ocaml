@@ -30,8 +30,8 @@ let tests_for_leftist_heap =
   let open IntLeftistHeap in
   let rec test_leftist i h =
     if is_empty h then () else (
-        assert_equal i (find_min h);
-        test_leftist (i+1) (delete_min h);
+      assert_equal i (find_min h);
+      test_leftist (i+1) (delete_min h);
     ) in [
     "empty" >:: (
       fun _ ->
@@ -72,12 +72,20 @@ let tests_for_leftist_heap =
           ]
         )
     );
+  ]
+
+let tests_for_weight_biased_leftist_heap =
+  let open IntWeightBiasedLeftistHeap in
+  let rec test_weight_biased_leftist i h =
+    if is_empty h then () else (
+      assert_equal i (find_min h);
+      test_weight_biased_leftist (i+1) (delete_min h);
+    ) in [
     "weight-biased leftist tree heap" >:: (
       fun _ ->
-        let open IntWeightBiasedLeftistHeap in
         let range = make_random_range 1 10000 in
         let h = List.fold_left (fun acc i -> insert acc i) empty range in
-        test_leftist 1 h
+        test_weight_biased_leftist 1 h
     );
   ]
 
@@ -85,8 +93,8 @@ let tests_for_binomial_heap =
   let open IntBinomialHeap in
   let rec test_binomial i h =
     if is_empty h then () else (
-        assert_equal i (find_min h);
-        test_binomial (i+1) (delete_min h);
+      assert_equal i (find_min h);
+      test_binomial (i+1) (delete_min h);
     ) in [
     "binomial heap" >:: (
       fun _ ->
@@ -96,7 +104,11 @@ let tests_for_binomial_heap =
     );
   ]
 
-let tests = List.append tests_for_leftist_heap tests_for_binomial_heap
+let tests = List.concat [
+    tests_for_leftist_heap;
+    tests_for_binomial_heap;
+    tests_for_weight_biased_leftist_heap;
+  ]
 let suite = "chatper 3 tests suite" >::: tests
 
 let _ = run_test_tt_main suite

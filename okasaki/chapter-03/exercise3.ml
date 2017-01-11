@@ -1,4 +1,5 @@
 exception Invalid_argument
+exception Unimplemented
 
 module type Ordered =
 sig
@@ -10,22 +11,33 @@ end
 
 module type Heap =
 sig
+  module Element : Ordered
+  type elt = Element.t
   type t
-  type elt
   val empty : t
   val is_empty : t -> bool
   val insert : t -> elt -> t
   val merge : t -> t -> t
   val find_min : t -> elt
   val delete_min: t -> t
+
+  (* Optional functions. *)
+  val non_merge_insert : t -> elt -> t
+  val from_list_naive : elt list -> t
+  val from_list_arr : elt list -> t
+  val from_list: elt list -> t
 end
 
-type 'a leftist_tree = E | T of int * ('a leftist_tree) * 'a * ('a leftist_tree)
+module type HeapMaker =
+  functor (E : Ordered) -> Heap with type Element.t = E.t
 
-module type LeftistHeap = functor (E : Ordered) -> Heap
+type 'a leftist_tree = E | T of int * 'a leftist_tree * 'a * 'a leftist_tree
+
+type 'a binomial_tree = Node of 'a * 'a binomial_tree list
 
 module LeftistHeap(E: Ordered) =
 struct
+  module Element = E
   type elt = E.t
   type t = elt leftist_tree
 
@@ -97,10 +109,9 @@ end
 
 (* Exercise 3.4:
  * Implement weight-biased leftist tree heap. *)
-module type WeightBiasedLeftistHeap = functor (E : Ordered) -> Heap
-
 module WeightBiasedLeftistHeap(E: Ordered) =
 struct
+  module Element = E
   type elt = E.t
   type t = elt leftist_tree
 
@@ -130,16 +141,18 @@ struct
   let delete_min = function
     | E -> raise Invalid_argument
     | T(_, a, _, b) -> merge a b
+
+  let non_merge_insert h v = raise Unimplemented
+  let from_list_naive ls = raise Unimplemented
+  let from_list_arr ls = raise Unimplemented
+  let from_list ls = raise Unimplemented
 end
 
 (* Exercise 3.6:
  * Implement binomial heaps with new representation. *)
-type 'a binomial_tree = Node of 'a * 'a binomial_tree list
-
-module type BinomialHeap = functor (E : Ordered) -> Heap
-
 module BinomialHeap(E: Ordered) =
 struct
+  module Element = E
   type elt = E.t
   type t = (int * elt binomial_tree) list
 
@@ -168,9 +181,6 @@ struct
       else if r2 < r1 then hd2::(merge h1 tl2)
       else insert_tree (link tr1 tr2) (r1+1) (merge tl1 tl2)
 
-  let get_val = function
-    | Node(v, _) -> v
-
   (* Helper function to get the node with minimum value and rest of the list. *)
   let rec split_by_min = function
     | [] -> raise Invalid_argument
@@ -187,4 +197,8 @@ struct
       let without_min = List.mapi (fun i v -> (i, v)) (List.rev children) in
       merge without_min rest
 
+  let non_merge_insert h v = raise Unimplemented
+  let from_list_naive ls = raise Unimplemented
+  let from_list_arr ls = raise Unimplemented
+  let from_list ls = raise Unimplemented
 end
