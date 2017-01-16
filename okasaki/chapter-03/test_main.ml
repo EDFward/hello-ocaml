@@ -17,6 +17,8 @@ module IntBinomialHeap = BinomialHeap(IntOrdered)
 
 module IntExplicitMinBinomialHeap = ExplicitMin(IntBinomialHeap)
 
+module IntRedBlackTreeSet = RedBlackTreeSet(IntOrdered)
+
 let _ = Random.self_init ()
 
 (* Range operator. *)
@@ -121,11 +123,30 @@ let tests_for_explicit_min_heap =
     );
   ]
 
+let tests_for_red_black_tree_set =
+  let open IntRedBlackTreeSet in
+  let range = make_range 1 50 in
+  let s = List.fold_left (fun acc i -> insert i acc) empty range in [
+    "insert and member" >:: (
+      fun _ ->
+        for i = 1 to 50 do
+          assert_equal true (member i s);
+          assert_equal s (insert i s);
+        done;
+        let s' = insert 100 s in (
+          assert_equal false (s == s');
+          assert_equal true (member 100 s');
+          assert_equal false (member 100 s);
+        );
+    );
+  ]
+
 let tests = List.concat [
     tests_for_leftist_heap;
     tests_for_binomial_heap;
     tests_for_weight_biased_leftist_heap;
     tests_for_explicit_min_heap;
+    tests_for_red_black_tree_set;
   ]
 let suite = "chatper 3 tests suite" >::: tests
 

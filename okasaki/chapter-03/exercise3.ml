@@ -28,15 +28,31 @@ sig
   val from_list: elt list -> t
 end
 
+module type Set =
+sig
+  module Element : Ordered
+  type elt = Element.t
+  type t
+  val empty : t
+  val insert : elt -> t -> t
+  val member : elt -> t -> bool
+end
+
 module type HeapMaker =
   functor (E : Ordered) -> Heap with module Element = E
 
 module type HeapEnhancer =
   functor (H : Heap) -> Heap with module Element = H.Element
 
+module type SetMaker =
+  functor (E : Ordered) -> Set with module Element = E
+
 type 'a leftist_tree = E | T of int * 'a leftist_tree * 'a * 'a leftist_tree
 
 type 'a binomial_tree = Node of 'a * 'a binomial_tree list
+
+type color = Red | Black
+type 'a rb_tree = RBE | RBT of color * 'a rb_tree * 'a * 'a rb_tree
 
 module LeftistHeap(E: Ordered) =
 struct
@@ -244,4 +260,40 @@ struct
   let from_list_naive ls = raise Unimplemented
   let from_list_arr ls = raise Unimplemented
   let from_list ls = raise Unimplemented
+end
+
+module RedBlackTreeSet(E: Ordered) =
+struct
+  module Element = E
+  type elt = E.t
+  type t = elt rb_tree
+
+  let empty = RBE
+  let is_empty h = h == RBE
+
+  let balance = function
+    | Black, RBT(Red, RBT(Red, a, z, b), y, c), x, d
+    | Black, a, z, RBT(Red, b, y, RBT(Red, c, x, d))
+    | Black, RBT(Red, a, z, RBT(Red, b, y, c)), x, d
+    | Black, a, z, RBT(Red, RBT(Red, b, y, c), x, d) ->
+      RBT(Red, RBT(Black, a, z, b), y, RBT(Black, c, x, d))
+    | c, a, v, b -> RBT(c, a, v, b)
+
+  let insert v s =
+    let rec aux = function
+      | RBE                    -> RBT(Red, RBE, v, RBE)
+      | RBT(c, a, v', b) as s' ->
+        if E.lt v v' then balance (c, aux a, v', b)
+        else if E.lt v' v then balance (c, a, v', aux b)
+        else s' in
+    match aux s with
+    | RBT(_, a, v, b) -> RBT(Black, a, v, b)
+    | _               -> raise Invalid_argument
+
+  let rec member v = function
+    | RBE              -> false
+    | RBT(_, a, v', b) ->
+      if E.eq v v' then true
+      else if E.lt v v' then member v a
+      else member v b
 end

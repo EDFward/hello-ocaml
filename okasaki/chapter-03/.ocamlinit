@@ -2,7 +2,6 @@
 #load "data.cmo";;
 #load "exercise3.cmo";;
 
-open Data
 open Exercise3
 
 module IntOrdered = struct
@@ -19,6 +18,8 @@ module IntWeightBiasedLeftistHeap = WeightBiasedLeftistHeap(IntOrdered)
 module IntBinomialHeap = BinomialHeap(IntOrdered)
 
 module IntExplicitMinBinomialHeap = ExplicitMin(IntBinomialHeap)
+
+module IntRedBlackTreeSet = RedBlackTreeSet(IntOrdered)
 
 let _ = Random.self_init ()
 
