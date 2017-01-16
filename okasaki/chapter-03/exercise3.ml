@@ -33,6 +33,7 @@ sig
   module Element : Ordered
   type elt = Element.t
   type t
+  val rep_ok : t -> t
   val empty : t
   val insert : elt -> t -> t
   val member : elt -> t -> bool
@@ -296,4 +297,36 @@ struct
       if E.eq v v' then true
       else if E.lt v v' then member v a
       else member v b
+
+  let check_black_node_num s =
+    let black_num : int option ref = ref None in
+    let rec check i s' = match s', !black_num with
+      | RBE, None               -> black_num := Some i
+      | RBE, Some n when n == i -> ()
+      | RBE, Some n             ->
+        let msg = Printf.sprintf "#black mismatch: %d != %d" n i in
+        Failure(msg) |> raise
+      | RBT(c, a, _, b), _      ->
+          let n = if c == Black then i+1 else i in (
+            check n a;
+            check n b;
+        ) in
+    check 0 s
+
+  let rec check_red_node_children s =
+    match s with
+    | RBE                               -> ()
+    | RBT(Red, RBT(Red, _, _, _), _, _)
+    | RBT(Red, _, _, RBT(Red, _, _, _)) ->
+      Failure("Red node has red children") |> raise
+    | RBT(_, a, _, b)                   -> (
+        check_red_node_children a;
+        check_red_node_children b;
+      )
+
+  let rep_ok s = (
+    check_black_node_num s;
+    check_red_node_children s;
+    s;
+  )
 end

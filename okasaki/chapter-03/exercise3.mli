@@ -33,6 +33,7 @@ sig
   module Element : Ordered
   type elt = Element.t
   type t
+  val rep_ok : t -> t
   val empty : t
   val insert : elt -> t -> t
   val member : elt -> t -> bool

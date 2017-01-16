@@ -36,7 +36,8 @@ let tests_for_leftist_heap =
     if is_empty h then () else (
       assert_equal i (find_min h);
       test_leftist (i+1) (delete_min h);
-    ) in [
+    ) in
+  [
     "empty" >:: (
       fun _ ->
         assert_equal true (is_empty empty);
@@ -84,7 +85,8 @@ let tests_for_weight_biased_leftist_heap =
     if is_empty h then () else (
       assert_equal i (find_min h);
       test_weight_biased_leftist (i+1) (delete_min h);
-    ) in [
+    ) in
+  [
     "weight-biased leftist tree heap" >:: (
       fun _ ->
         let range = make_random_range 1 10000 in
@@ -99,7 +101,8 @@ let tests_for_binomial_heap =
     if is_empty h then () else (
       assert_equal i (find_min h);
       test_binomial (i+1) (delete_min h);
-    ) in [
+    ) in
+  [
     "binomial heap" >:: (
       fun _ ->
         let range = make_random_range 1 1000 in
@@ -114,7 +117,8 @@ let tests_for_explicit_min_heap =
     if is_empty h then () else (
       assert_equal i (find_min h);
       test_explicit_min (i+1) (delete_min h);
-    ) in [
+    ) in
+  [
     "explicit min heap" >:: (
       fun _ ->
         let range = make_random_range 1 1000 in
@@ -126,7 +130,8 @@ let tests_for_explicit_min_heap =
 let tests_for_red_black_tree_set =
   let open IntRedBlackTreeSet in
   let range = make_range 1 50 in
-  let s = List.fold_left (fun acc i -> insert i acc) empty range in [
+  let s = List.fold_left (fun acc i -> insert i acc |> rep_ok) empty range in
+  [
     "insert and member" >:: (
       fun _ ->
         for i = 1 to 50 do
