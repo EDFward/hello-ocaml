@@ -37,6 +37,9 @@ sig
   val empty : t
   val insert : elt -> t -> t
   val member : elt -> t -> bool
+  val from_ord_list_naive : elt list -> t
+  val from_ord_list_arr : elt list -> t
+  val from_ord_list : elt list -> t
 end
 
 module type HeapMaker =
@@ -329,4 +332,27 @@ struct
     check_red_node_children s;
     s;
   )
+
+  let from_ord_list_naive = List.fold_left (fun acc i -> insert i acc) empty
+
+  (* Using array for fast random access. Only color bottom leaves as Red. *)
+  let from_ord_list_arr = function
+    | [] -> RBE
+    | ls ->
+      let arr = Array.of_list ls in
+      let sz_float = Array.length arr |> float_of_int in
+      let max_depth = (log sz_float /. log 2.0 |> int_of_float) + 1 in
+      let rec aux i j depth =
+        let c = if depth == max_depth then Red else Black in
+        if i == j then RBE
+        else if i+1 == j then RBT(c, RBE, arr.(i), RBE)
+        else
+          let mid = (i+j)/2 in
+          let v = arr.(mid) in
+          RBT(c, aux i mid (depth+1), v, aux (mid+1) j (depth+1)) in
+      aux 0 (Array.length arr) 1
+
+  (* From paper //Constructing Red-Black Trees// by Ralf Hinze. *)
+  let from_ord_list ls = raise Unimplemented
+
 end

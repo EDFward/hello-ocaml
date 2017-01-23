@@ -53,12 +53,12 @@ let tests_for_leftist_heap =
           test_leftist 1 h2;
         )
     );
-    "from_list" >:: (
+    "from list" >:: (
       fun _ ->
         let open Landmark in
-        let profile_from_list_naive = register "profile_from_list_naive" in
-        let profile_from_list = register "profile_from_list" in
-        let profile_from_list_arr = register "profile_from_list_arr" in
+        let profile_from_list_naive = register "LT::from_list_naive" in
+        let profile_from_list = register "LT::from_list" in
+        let profile_from_list_arr = register "LT::from_list_arr" in
         let random_range = make_random_range 1 10000 in (
           start_profiling ();
           List.iter (
@@ -144,6 +144,32 @@ let tests_for_red_black_tree_set =
           assert_equal false (member 100 s);
         );
     );
+    "from ordered list" >:: (
+      fun _ ->
+        let open Landmark in
+        let profile_from_ord_list_naive = register "RB::from_ord_list_naive" in
+        let profile_from_ord_list_arr = register "RB::from_ord_list_arr" in (
+          start_profiling ();
+          List.iter (
+            fun (label, f) -> (
+                enter label;
+                for i = 1 to 300 do
+                  let s = f (make_range 1 i) in (
+                    assert_equal s (rep_ok s);
+                    assert_equal false (member 0 s);
+                    assert_equal true (member 1 s);
+                    assert_equal true (member i s);
+                    assert_equal false (member (i+1) s);
+                  )
+                done;
+                exit label;
+              )
+          ) [
+            (profile_from_ord_list_naive, from_ord_list_naive);
+            (profile_from_ord_list_arr, from_ord_list_arr);
+          ]
+        )
+    );
   ]
 
 let tests = List.concat [
@@ -153,6 +179,7 @@ let tests = List.concat [
     tests_for_explicit_min_heap;
     tests_for_red_black_tree_set;
   ]
+
 let suite = "chatper 3 tests suite" >::: tests
 
 let _ = run_test_tt_main suite

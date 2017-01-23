@@ -37,6 +37,9 @@ sig
   val empty : t
   val insert : elt -> t -> t
   val member : elt -> t -> bool
+  val from_ord_list_naive : elt list -> t
+  val from_ord_list_arr : elt list -> t
+  val from_ord_list : elt list -> t
 end
 
 module type HeapMaker =

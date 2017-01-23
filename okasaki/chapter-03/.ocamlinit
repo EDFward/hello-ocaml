@@ -28,3 +28,9 @@ let make_range i j =
   let rec aux n acc =
     if n < i then acc else aux (n-1) (n::acc)
   in aux j []
+
+let make_random_range i j = List.sort
+    (fun _ _ -> (Random.int 3) - 1) (make_range i j)
+
+let make_rbs range = let open IntRedBlackTreeSet in
+  List.fold_left (fun acc i -> insert i acc) empty range
