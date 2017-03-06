@@ -343,13 +343,15 @@ struct
       let sz_float = Array.length arr |> float_of_int in
       let max_depth = (log sz_float /. log 2.0 |> int_of_float) + 1 in
       let rec aux i j depth =
-        let c = if depth == max_depth then Red else Black in
+        let c =
+          if depth == 1 then Black  (* Root should always be black. *)
+          else if depth == max_depth then Red
+          else Black in
         if i == j then RBE
         else if i+1 == j then RBT(c, RBE, arr.(i), RBE)
         else
           let mid = (i+j)/2 in
-          let v = arr.(mid) in
-          RBT(c, aux i mid (depth+1), v, aux (mid+1) j (depth+1)) in
+          RBT(c, aux i mid (depth+1), arr.(mid), aux (mid+1) j (depth+1)) in
       aux 0 (Array.length arr) 1
 
   (* From paper //Constructing Red-Black Trees// by Ralf Hinze. *)

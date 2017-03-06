@@ -60,7 +60,6 @@ let tests_for_leftist_heap =
         let profile_from_list = register "LT::from_list" in
         let profile_from_list_arr = register "LT::from_list_arr" in
         let random_range = make_random_range 1 10000 in (
-          start_profiling ();
           List.iter (
             fun (label, f) ->
               test_leftist 1 (
@@ -74,7 +73,7 @@ let tests_for_leftist_heap =
             (profile_from_list_naive, from_list_naive);
             (profile_from_list_arr, from_list_arr);
             (profile_from_list, from_list);
-          ]
+          ];
         )
     );
   ]
@@ -149,7 +148,6 @@ let tests_for_red_black_tree_set =
         let open Landmark in
         let profile_from_ord_list_naive = register "RB::from_ord_list_naive" in
         let profile_from_ord_list_arr = register "RB::from_ord_list_arr" in (
-          start_profiling ();
           List.iter (
             fun (label, f) -> (
                 enter label;
@@ -167,7 +165,7 @@ let tests_for_red_black_tree_set =
           ) [
             (profile_from_ord_list_naive, from_ord_list_naive);
             (profile_from_ord_list_arr, from_ord_list_arr);
-          ]
+          ];
         )
     );
   ]
@@ -182,4 +180,5 @@ let tests = List.concat [
 
 let suite = "chatper 3 tests suite" >::: tests
 
+let _ = Landmark.start_profiling ()
 let _ = run_test_tt_main suite
