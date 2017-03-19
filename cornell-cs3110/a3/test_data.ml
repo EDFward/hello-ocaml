@@ -15,7 +15,7 @@ end
 module DictTester (M : DictionaryMaker) = struct
 
   module IntComparble = struct
-    type t = int 
+    type t = int
     let compare a b = match compare a b with
       | -1 -> `LT
       | 1 -> `GT
@@ -26,7 +26,7 @@ module DictTester (M : DictionaryMaker) = struct
 
   module IntDict = M(IntComparble)
 
-  let sample_dict = 
+  let sample_dict =
     List.fold_left (fun acc i -> IntDict.insert i i acc) IntDict.empty (1--100)
 
   let tests = let open IntDict in [
@@ -45,7 +45,7 @@ module DictTester (M : DictionaryMaker) = struct
           end
       );
       "insert" >:: (
-        fun _ -> 
+        fun _ ->
           begin
             assert_equal 100 (size sample_dict);
             assert_equal 101 (size (insert 101 101 sample_dict));
@@ -54,7 +54,7 @@ module DictTester (M : DictionaryMaker) = struct
       );
       "member" >:: (
         fun _ ->
-          begin 
+          begin
             assert_equal true (member 50 sample_dict);
             assert_equal false (member 101 sample_dict);
             let d = insert 101 101 sample_dict in assert_equal true (member 101 d);
@@ -103,10 +103,6 @@ module DictTester (M : DictionaryMaker) = struct
       );
     ]
 end
-
-(* [tests] is where you should provide OUnit test cases for
- * your own implementations of dictionaries and sets.  You're
- * free to use [DictTester] as part of that if you choose. *)
 
 module ListDictTester = DictTester(MakeListDictionary)
 
