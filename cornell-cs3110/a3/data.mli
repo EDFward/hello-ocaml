@@ -91,7 +91,7 @@ module type Dictionary = sig
    * It outputs a textual representation of a dictionary
    * on the given formatter. *)
   val format : (Format.formatter -> 'value -> unit)
-                -> Format.formatter -> 'value t -> unit
+    -> Format.formatter -> 'value t -> unit
 end
 
 (* A [DictionaryMaker] is a functor that makes a [Dictionary]

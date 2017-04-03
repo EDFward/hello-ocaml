@@ -31,6 +31,9 @@ let (--) i j =
 let sample_dict = 
   List.fold_left (fun acc i -> IntDict.insert i i acc) IntDict.empty (1--100)
 
+module IntTreeDict = MakeTreeDictionary(IntComparble);;
+#install_printer IntTreeDict.format;;
+
 (* Set *)
 
 module IntSet = MakeSetOfDictionary(IntDict);;
@@ -43,4 +46,3 @@ let sample_set1 = make_sample_set (1--30) and sample_set2 = make_sample_set (20-
 (* Engine *)
 
 open Engine
-

@@ -10,8 +10,6 @@ module type Tests = sig
   val tests : OUnit2.test list
 end
 
-(* [DictTester] is where you will implement your test harness
- * to find buggy implementations. *)
 module DictTester (M : DictionaryMaker) = struct
 
   module IntComparble = struct
@@ -70,6 +68,7 @@ module DictTester (M : DictionaryMaker) = struct
             assert_equal (Some 42) (find 1 (insert 1 42 sample_dict));
           end
       );
+(*
       "remove" >:: (
         fun _ -> let d1 = remove 42 sample_dict and d2 = remove 101 sample_dict in
           begin
@@ -79,6 +78,7 @@ module DictTester (M : DictionaryMaker) = struct
             assert_equal true (is_empty (remove 42 empty));
           end
       );
+*)
       "choose" >:: (
         fun _ ->
           begin
@@ -105,8 +105,6 @@ module DictTester (M : DictionaryMaker) = struct
 end
 
 module ListDictTester = DictTester(MakeListDictionary)
+module TreeDictTester = DictTester(MakeTreeDictionary)
 
-let tests = ListDictTester.tests
-
-(* DO NOT call OUnit2.run_test_tt_main from here.  It must
- * be called only in test_main.ml.  *)
+let tests = List.append ListDictTester.tests TreeDictTester.tests

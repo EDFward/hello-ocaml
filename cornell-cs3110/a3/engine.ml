@@ -90,15 +90,11 @@ module StringComparable = struct
   let format fmt = Format.fprintf fmt "%s"
 end
 
-module StringDict = Data.MakeListDictionary(StringComparable)
+module StringDictByList = Data.MakeListDictionary(StringComparable)
+module StringDictByTree = Data.MakeTreeDictionary(StringComparable)
 
-module StringSet = Data.MakeSetOfDictionary(StringDict)
+module StringSetByList = Data.MakeSetOfDictionary(StringDictByList)
+module StringSetByTree = Data.MakeSetOfDictionary(StringDictByTree)
 
-module ListEngine = MakeEngine(StringSet)(StringDict)
-
-(* TODO (later): after you've implemented 2-3 trees,
-   replace this definition of [TreeEngine] with one
-   that calls [MakeEngine] on some appropriate parameters.
-   For now, this code punts by equating the two modules. *)
-module TreeEngine = ListEngine
-
+module ListEngine = MakeEngine(StringSetByList)(StringDictByList)
+module TreeEngine = MakeEngine(StringSetByTree)(StringDictByTree)
