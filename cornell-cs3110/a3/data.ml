@@ -1,3 +1,4 @@
+exception Invalid_argument
 exception Unimplemented
 
 (* Take first n elements of a list. *)
@@ -116,9 +117,6 @@ module MakeTreeDictionary (C: Comparable) = struct
       Two of (key * 'value) * 'value t * 'value t |
       Three of (key * 'value) * (key * 'value) * 'value t * 'value t * 'value t
 
-  (* Type of kick-up configuration. *)
-  type 'value kick_up = Done of 'value t | Up of (key * 'value) * 'value t * 'value t
-
   (* Customized equality for key types. *)
   let (===) a b = Key.compare a b = `EQ
 
@@ -133,38 +131,150 @@ module MakeTreeDictionary (C: Comparable) = struct
     | Two(_, l, r) -> 1 + size l + size r
     | Three(_, _, l, m, r) -> 2 + size m + size l + size r
 
-  let insert k v d =
-    let rec aux k v =
-      function
-      | Empty -> Up((k, v), Empty, Empty)
-      | Two((k1, v1), l, r) ->
-        if k === k1 then Done(Two((k, v), l, r))
-        else if Key.compare k k1 = `LT then match aux k v l with
-          | Done(new_t) -> Done(Two((k1, v1), new_t, r))
-          | Up((k', v'), l', r') -> Done(Three((k', v'), (k1, v1), l', r', r))
-        else (
-          match aux k v r with
-          | Done(new_t) -> Done(Two((k1, v1), l, new_t))
-          | Up((k', v'), l', r') -> Done(Three((k1, v1), (k', v'), l, l', r'))
-        )
-      | Three((k1, v1), (k2, v2), l, m, r) ->
-        if k === k1 then Done(Three((k, v), (k2, v2), l, m, r))
-        else if k === k2 then Done(Three((k1, v1), (k, v), l, m, r))
-        else if Key.compare k k1 = `LT then match aux k v l with
-          | Done(new_t) -> Done(Three((k1, v1), (k2, v2), new_t, m, r))
-          | Up((k', v'), l', r') -> Up((k1, v1), Two((k', v'), l', r'), Two((k2, v2), m, r))
-        else if Key.compare k k2 = `LT then match aux k v m with
-          | Done(new_t) -> Done(Three((k1, v1), (k2, v2), l, new_t, r))
-          | Up((k', v'), l', r') -> Up((k', v'), Two((k1, v1), l, l'), Two((k2, v2), r', r))
-        else match aux k v r with
-          | Done(new_t) -> Done(Three((k1, v1), (k2, v2), l, m, new_t))
-          | Up((k', v'), l', r') -> Up((k2, v2), Two((k1, v1), l, m), Two((k', v'), l', r'))
-    in
-    match aux k v d with
-    | Done(new_t) -> new_t
-    | Up((k', v'), l, r) -> Two((k', v'), l, r)
+  (* Type of kick-up configuration. *)
+  type 'value kick_up = Done of 'value t | Up of (key * 'value) * 'value t * 'value t
 
-  let remove k d = raise Unimplemented
+  let insert k v d =
+    let rec aux =
+      function
+      | Empty                        -> Up((k, v), Empty, Empty)
+      | Two(((k1, v1) as kv1), l, r) ->
+        if k === k1 then Done(Two((k, v), l, r))
+        else if Key.compare k k1 = `LT then match aux l with
+          | Done(new_t)     -> Done(Two(kv1, new_t, r))
+          | Up(kv', l', r') -> Done(Three(kv', kv1, l', r', r))
+        else (
+          match aux r with
+          | Done(new_t)     -> Done(Two(kv1, l, new_t))
+          | Up(kv', l', r') -> Done(Three(kv1, kv', l, l', r'))
+        )
+      | Three(((k1, v1) as kv1), ((k2, v2) as kv2), l, m, r) ->
+        if k === k1 then Done(Three((k, v), kv2, l, m, r))
+        else if k === k2 then Done(Three(kv1, (k, v), l, m, r))
+        else if Key.compare k k1 = `LT then match aux l with
+          | Done(new_t)     -> Done(Three(kv1, kv2, new_t, m, r))
+          | Up(kv', l', r') -> Up(kv1, Two(kv', l', r'), Two(kv2, m, r))
+        else if Key.compare k k2 = `LT then match aux m with
+          | Done(new_t)     -> Done(Three(kv1, kv2, l, new_t, r))
+          | Up(kv', l', r') -> Up(kv', Two(kv1, l, l'), Two(kv2, r', r))
+        else match aux r with
+          | Done(new_t)     -> Done(Three(kv1, kv2, l, m, new_t))
+          | Up(kv', l', r') -> Up(kv2, Two(kv1, l, m), Two(kv', l', r'))
+    in
+    match aux d with
+    | Done(new_t)  -> new_t
+    | Up(kv, l, r) -> Two(kv, l, r)
+
+
+  (* Type of hole configuration. *)
+  type 'value kv_option = (key * 'value) option
+  type 'value hole = Hole of 'value kv_option * 'value t | Absorbed of 'value kv_option * 'value t
+
+  let remove k d =
+    (* Replace with in-order successor. *)
+    let rec aux to_replace d =
+      match to_replace, d with
+        (* Base cases: leaves. *)
+        | _, Empty -> Absorbed(None, Empty)
+        | true, Two((k1, v1), Empty, Empty) -> Hole(Some(k1, v1), Empty)
+        | true, Three((k1, v1), (k2, v2), Empty, Empty, Empty) -> Absorbed(Some(k1, v1), Two((k2, v2), Empty, Empty))
+        (* Recurse if already find the value to remove. *)
+        | true, Two((k1, v1), l, r) -> (
+            match aux true l with
+            | Absorbed(kv_opt, new_t) -> Absorbed(kv_opt, Two((k1, v1), new_t, r))
+            | Hole(kv_opt, new_t) -> (
+                match r with
+                | Empty -> raise Invalid_argument
+                | Two((k2, v2), l', r') -> Hole(kv_opt, Three((k1, v1), (k2, v2), new_t, l', r'))
+                | Three((k2, v2), (k3, v3), l', m', r') -> Absorbed(kv_opt, Two((k2, v2), Two((k1, v1), new_t, l'), Two((k3, v3), m', r')))
+              )
+          )
+        | true, Three((k1, v1), (k2, v2), l, m, r) -> (
+            match aux true l with
+            | Absorbed(kv_opt, new_t) -> Absorbed(kv_opt, Three((k1, v1), (k2, v2), new_t, m, r))
+            | Hole(kv_opt, new_t) -> (
+                match m with
+                | Empty -> raise Invalid_argument
+                | Two((k3, v3), l', r') -> Absorbed(kv_opt, Two((k2, v2), Three((k1, v1), (k3, v3), new_t, l', r'), r))
+                | Three((k3, v3), (k4, v4), l', m', r') -> Absorbed(kv_opt, Three((k3, v3), (k2, v2), Two((k1, v1), new_t, l'), Two((k4, v4), m', r'), r))
+              )
+          )
+        (* Recurse if haven't found the value to remove. *)
+        | false, Two((k1, v1), l, r) -> (
+            if k === k1 then match aux true r with
+              | Absorbed(Some(k', v'), new_t) -> Absorbed(None, Two((k', v'), new_t, r))
+              | Hole(Some(k', v'), new_t) -> (
+                  match l with
+                  | Empty -> raise Invalid_argument
+                  | Two((k2, v2), l', r') -> Hole(None, Three((k2, v2), (k', v'), l', r', new_t))
+                  | Three((k2, v2), (k3, v3), l', m', r') -> Absorbed(None, Two((k3, v3), Two((k2, v2), l', r'), Two((k', v'), r', new_t)))
+                )
+              | _ -> Hole(None, Empty)
+            else if Key.compare k k1 = `LT then match aux false l with
+              | Absorbed(kv_opt, new_t) -> Absorbed(kv_opt, Two((k1, v1), new_t, r))
+              | Hole(kv_opt, new_t) -> (
+                  match r with
+                  | Empty -> raise Invalid_argument
+                  | Two((k2, v2), l', r') -> Hole(kv_opt, Three((k1, v1), (k2, v2), new_t, l', r'))
+                  | Three((k2, v2), (k3, v3), l', m', r') -> Absorbed(kv_opt, Two((k2, v2), Two((k1, v1), new_t, l'), Two((k3, v3), m', r')))
+                )
+            else match aux false r with
+              | Absorbed(kv_opt, new_t) -> Absorbed(kv_opt, Two((k1, v1), l, new_t))
+              | Hole(kv_opt, new_t) -> (
+                  match l with
+                  | Empty -> raise Invalid_argument
+                  | Two((k2, v2), l', r') -> Hole(kv_opt, Three((k2, v2), (k1, v1), l', r', new_t))
+                  | Three((k2, v2), (k3, v3), l', m', r') -> Absorbed(kv_opt, Two((k3, v3), Two((k2, v2), l', r'), Two((k1, v1), r', new_t)))
+                )
+          )
+        | false, Three((k1, v1), (k2, v2), l, m, r) -> (
+            if k === k1 then match aux true m with
+              | Absorbed(Some(k', v'), new_t) -> Absorbed(None, Three((k', v'), (k2, v2), l, new_t, r))
+              | Hole(Some(k', v'), new_t) -> (
+                  match r with
+                  | Empty -> raise Invalid_argument
+                  | Two((k3, v3), l', r') -> Absorbed(None, Two((k', v'), l, Three((k2, v2), (k3, v3), new_t, l', r')))
+                  | Three((k3, v3), (k4, v4), l', m', r') -> Absorbed(None, Three((k', v'), (k3, v3), l, Two((k2, v2), new_t, l'), Two((k4, v4), m', r')))
+                )
+              | _ -> Absorbed(None, Two((k2, v2), Empty, Empty))
+            else if k === k2 then match aux true r with
+              | Absorbed(Some(k', v'), new_t) -> Absorbed(None, Three((k1, v1), (k', v'), l, m, new_t))
+              | Hole(Some(k', v'), new_t) -> (
+                  match m with
+                  | Empty -> raise Invalid_argument
+                  | Two((k3, v3), l', r') -> Absorbed(None, Two((k', v'), l, Three((k3, v3), (k2, v2), l', r', new_t)))
+                  | Three((k3, v3), (k4, v4), l', m', r') -> Absorbed(None, Three((k', v'), (k4, v4), l, Two((k3, v3), l', m'), Two((k2, v2), r', new_t)))
+                )
+              | _ -> Absorbed(None, Two((k1, v1), Empty, Empty))
+            else if Key.compare k k1 = `LT then match aux false l with
+              | Absorbed(kv_opt, new_t) -> Absorbed(kv_opt, Three((k1, v1), (k2, v2), new_t, m, r))
+              | Hole(kv_opt, new_t) -> (
+                  match m with
+                  | Empty -> raise Invalid_argument
+                  | Two((k3, v3), l', r') -> Absorbed(kv_opt, Two((k2, v2), Three((k1, v1), (k3, v3), new_t, l', r'), r))
+                  | Three((k3, v3), (k4, v4), l', m', r') -> Absorbed(kv_opt, Three((k3, v3), (k2, v2), Two((k1, v1), new_t, l'), Two((k4, v4), m', r'), r))
+                )
+            else if Key.compare k k2 = `LT then match aux false m with
+              | Absorbed(kv_opt, new_t) -> Absorbed(kv_opt, Three((k1, v1), (k2, v2), l, new_t, r))
+              | Hole(kv_opt, new_t) -> (
+                  match r with
+                  | Empty -> raise Invalid_argument
+                  | Two((k3, v3), l', r') -> Absorbed(kv_opt, Two((k1, v1), l, Three((k2, v2), (k3, v3), new_t, l', r')))
+                  | Three((k3, v3), (k4, v4), l', m', r') -> Absorbed(kv_opt, Three((k1, v1), (k3, v3), l, Two((k2, v2), new_t, l'), Two((k4, v4), m', r')))
+                )
+            else match aux false r with
+              | Absorbed(kv_opt, new_t) -> Absorbed(kv_opt, Three((k1, v1), (k1, v1), l, m, new_t))
+              | Hole(kv_opt, new_t) -> (
+                  match m with
+                  | Empty -> raise Invalid_argument
+                  | Two((k3, v3), l', r') -> Absorbed(kv_opt, Two((k1, v1), l, Three((k3, v3), (k2, v2), l', r', new_t)))
+                  | Three((k3, v3), (k4, v4), l', m', r') -> Absorbed(kv_opt, Three((k1, v1), (k4, v4), l, Two((k3, v3), l', m'), Two((k2, v2), r', new_t)))
+                )
+          )
+    in
+    match aux false d with
+    | Absorbed(_, new_t) -> new_t
+    | Hole(_, new_t) -> new_t
 
   let rec find k = function
     | Empty -> None

@@ -7,7 +7,16 @@
 
 open Data;;
 
-module IntComparble = struct
+module StringComparable = struct
+  type t = string 
+  let compare a b = match compare a b with
+    | -1 -> `LT
+    | 1 -> `GT
+    | _ -> `EQ
+  let format fmt = Format.fprintf fmt "%s"
+end
+
+module IntComparable = struct
   type t = int 
   let compare a b = match compare a b with
     | -1 -> `LT
@@ -18,7 +27,7 @@ end
 
 (* Dict *)
 
-module IntDict = MakeListDictionary(IntComparble);;
+module IntDict = MakeListDictionary(IntComparable);;
 #install_printer IntDict.format;;
 
 let empty_dict = IntDict.empty;;
@@ -31,8 +40,14 @@ let (--) i j =
 let sample_dict = 
   List.fold_left (fun acc i -> IntDict.insert i i acc) IntDict.empty (1--100)
 
-module IntTreeDict = MakeTreeDictionary(IntComparble);;
+module IntTreeDict = MakeTreeDictionary(IntComparable);;
 #install_printer IntTreeDict.format;;
+
+module StringTreeDict = MakeTreeDictionary(StringComparable);;
+#install_printer StringTreeDict.format;;
+
+let sample_tree_dict = 
+  List.fold_left (fun acc i -> StringTreeDict.insert i i acc) StringTreeDict.empty ["A"; "L"; "G"; "O"; "R"; "I"; "T"; "H"; "M"; "S"]
 
 (* Set *)
 

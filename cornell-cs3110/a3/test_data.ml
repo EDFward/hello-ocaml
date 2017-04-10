@@ -68,7 +68,6 @@ module DictTester (M : DictionaryMaker) = struct
             assert_equal (Some 42) (find 1 (insert 1 42 sample_dict));
           end
       );
-(*
       "remove" >:: (
         fun _ -> let d1 = remove 42 sample_dict and d2 = remove 101 sample_dict in
           begin
@@ -78,7 +77,6 @@ module DictTester (M : DictionaryMaker) = struct
             assert_equal true (is_empty (remove 42 empty));
           end
       );
-*)
       "choose" >:: (
         fun _ ->
           begin
