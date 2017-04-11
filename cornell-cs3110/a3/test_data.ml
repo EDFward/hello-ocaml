@@ -69,12 +69,14 @@ module DictTester (M : DictionaryMaker) = struct
           end
       );
       "remove" >:: (
-        fun _ -> let d1 = remove 42 sample_dict and d2 = remove 101 sample_dict in
+        fun _ ->
+          let d1 = remove 42 sample_dict |> rep_ok and d2 = remove 101 sample_dict |> rep_ok in
           begin
             assert_equal None (find 42 d1);
             assert_equal 99 (size d1);
             assert_equal 100 (size d2);
             assert_equal true (is_empty (remove 42 empty));
+            let _ = List.fold_left (fun acc i -> remove i acc |> rep_ok) d1 (10--110) in ();
           end
       );
       "choose" >:: (
